@@ -1,8 +1,8 @@
 import tkinter as tk
-from tkinter import messagebox
 from plyer import notification
 import time
 from datetime import datetime
+from tkinter import messagebox
 
 
 # Estructura de datos para almacenar los recordatorios
@@ -17,14 +17,10 @@ def crear_recordatorio():
     # Convierte la hora a formato de 12 horas con ceros iniciales
     hora = f"{hora}:{minuto} {am_pm}"
 
-    # Obtiene la fecha actual
-    fecha_actual = datetime.now().strftime("%Y-%m-%d")
-
     # Almacena el recordatorio en la estructura de datos
     recordatorios[len(recordatorios) + 1] = {
         'tarea': tarea,
-        'hora': hora,
-        'fecha': fecha_actual
+        'hora': hora
     }
 
     # Borra los campos después de agregar el recordatorio
@@ -34,32 +30,42 @@ def crear_recordatorio():
 
     messagebox.showinfo('Éxito', 'Recordatorio creado con éxito')
 
+# Lista para almacenar los índices de los recordatorios que deben eliminarse
+recordatorios_a_eliminar = []
+
 def verificar_recordatorios():
     hora_actual = datetime.now().strftime("%I:%M %p")  # Formato de 12 horas con AM/PM
-    print('Hora Actual:', hora_actual)
-    for _, recordatorio in recordatorios.items():
+    for indice, recordatorio in recordatorios.items():
         tarea = recordatorio['tarea']
         hora = recordatorio['hora']
-        fecha = recordatorio['fecha']
 
-        # Parsea la hora del recordatorio a un objeto de tiempo
-        hora_recordatorio = datetime.strptime(hora, "%I:%M %p").strftime("%I:%M %p")
-
-        # Compara solo las horas y los minutos, excluyendo AM/PM
-        if hora_actual[:-6] == hora_recordatorio[:-6]:
-            mensaje = f"Tarea: {tarea}\nHora: {hora}\nFecha: {fecha}"
+        # Compara la hora actual y la hora del recordatorio sin tener en cuenta AM/PM
+        if hora_actual == hora:
+            mensaje = f"Tarea: {tarea}\nHora: {hora_actual}"
             notification.notify(
                 title='Recordatorio',
                 message=mensaje,
                 timeout=10
             )
-        print('Hora Actual:', hora_recordatorio)
-
+            print(f'Notificación para {tarea} mostrada a las {hora_actual}')
             
+            # Agrega el índice del recordatorio a la lista de eliminación
+            recordatorios_a_eliminar.append(indice)
+
+    # Elimina los recordatorios marcados para eliminación
+    for indice in recordatorios_a_eliminar:
+        del recordatorios[indice]
+    
+    # Limpia la lista de eliminación
+    recordatorios_a_eliminar.clear()
+
+# ...
+
 # Función para actualizar el reloj
 def actualizar_reloj():
     hora_actual = time.strftime("%I:%M:%S %p")  # Formato de 12 horas con AM/PM
     reloj_label.config(text=hora_actual)
+    verificar_recordatorios()  # Verificar recordatorios cada vez que se actualiza el reloj
     ventana.after(1000, actualizar_reloj)
 
 # Crear una ventana
@@ -91,22 +97,9 @@ am_pm_var = tk.StringVar(value="AM")  # Valor inicial AM
 am_pm_menu = tk.OptionMenu(ventana, am_pm_var, "AM", "PM")
 am_pm_menu.pack()
 
-# Etiqueta y campo de entrada para la fecha actual
-fecha_actual_label = tk.Label(ventana, text='Fecha Actual:')
-fecha_actual_label.pack()
-fecha_actual_entry = tk.Entry(ventana)
-fecha_actual_entry.insert(0, datetime.now().strftime("%d/%m/%Y"))
-fecha_actual_entry.pack()
-
-# Botones para crear y mostrar recordatorios
+# Botón para crear recordatorios
 crear_button = tk.Button(ventana, text='Crear Recordatorio', command=crear_recordatorio)
 crear_button.pack()
-
-mostrar_button = tk.Button(ventana, text='Mostrar Recordatorios', command=verificar_recordatorios)
-mostrar_button.pack()
-
-# Configurar un temporizador para verificar recordatorios cada minuto
-ventana.after(60000, verificar_recordatorios) 
 
 # Crear una etiqueta para mostrar la hora actual
 reloj_label = tk.Label(ventana, text='', font=('Helvetica', 20))
