@@ -6,12 +6,24 @@ from tkinter import messagebox
 
 # Estructura de datos para almacenar los recordatorios
 recordatorios = {}
-
 def crear_recordatorio():
     tarea = tarea_entry.get()
     hora = str(hora_spinbox.get()).zfill(2)  # Formatea las horas con dos dígitos
     minuto = str(minuto_spinbox.get()).zfill(2)  # Formatea los minutos con dos dígitos
     am_pm = am_pm_var.get()  # Obtiene el valor de AM/PM
+
+    # Validación de campos
+    if tarea.strip() == "":
+        messagebox.showerror('Error', 'El campo de tarea no puede estar vacío')
+        return
+
+    if hora == '00' and minuto == '00' and am_pm == 'Seleccione':
+        messagebox.showerror('Error', 'La hora no puede ser 00:00 AM/PM')
+        return
+
+    if am_pm not in ['AM', 'PM']:
+        messagebox.showerror('Error', 'Debe seleccionar AM o PM')
+        return
 
     # Convierte la hora a formato de 12 horas con ceros iniciales
     hora = f"{hora}:{minuto} {am_pm}"
@@ -28,6 +40,7 @@ def crear_recordatorio():
     hora_spinbox.insert(0, '0')
     minuto_spinbox.delete(0, 'end')
     minuto_spinbox.insert(0, '0')
+    am_pm_var.set('Seleccione')  # Reinicia el valor del menú desplegable
 
     messagebox.showinfo('Éxito', 'Recordatorio creado con éxito')
 
